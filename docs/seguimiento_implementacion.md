@@ -126,7 +126,7 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | 1. Base del repositorio | COMPLETADA | 5 | 5 | Ninguno |
 | 2. Floci y secretos | EN PROGRESO | 8 | 11 | Validación de imágenes y persistencia real |
 | 3. Agente mínimo | COMPLETADA | 6 | 6 | Ninguno |
-| 4. Bridge WhatsApp | PENDIENTE | 0 | 9 | Fases 2 y 3 |
+| 4. Bridge WhatsApp | COMPLETADA | 9 | 9 | QR reservado para smoke test manual |
 | 5. Integración y portabilidad | PENDIENTE | 0 | 9 | Fases 2–4 |
 | 6. Validación y cierre | PENDIENTE | 0 | 11 | Fases 1–5 |
 
@@ -180,15 +180,15 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 
 | ID | Descripción | Estado | Dependencias |
 | --- | --- | --- | --- |
-| BRIDGE-001 | Configurar `whatsapp-web.js` y Chromium | PENDIENTE | BASE-004 |
-| BRIDGE-002 | Persistir sesión de WhatsApp | PENDIENTE | BRIDGE-001 |
-| BRIDGE-003 | Filtrar mensajes no soportados | PENDIENTE | BRIDGE-001 |
-| BRIDGE-004 | Obtener JID y nombre visible | PENDIENTE | BRIDGE-003 |
-| BRIDGE-005 | Consumir agente con token de Floci | PENDIENTE | SECRET-001, AGENT-003 |
-| BRIDGE-006 | Manejar timeout y fallos | PENDIENTE | BRIDGE-005 |
-| BRIDGE-007 | Controlar animación de escritura | PENDIENTE | BRIDGE-005 |
-| BRIDGE-008 | Implementar ACL configurable | PENDIENTE | BRIDGE-003 |
-| BRIDGE-009 | Añadir pruebas aisladas | PENDIENTE | BRIDGE-003–008 |
+| BRIDGE-001 | Configurar `whatsapp-web.js` y Chromium | COMPLETADA | BASE-004 |
+| BRIDGE-002 | Persistir sesión de WhatsApp | COMPLETADA | BRIDGE-001 |
+| BRIDGE-003 | Filtrar mensajes no soportados | COMPLETADA | BRIDGE-001 |
+| BRIDGE-004 | Obtener JID y nombre visible | COMPLETADA | BRIDGE-003 |
+| BRIDGE-005 | Consumir agente con token de Floci | COMPLETADA | SECRET-001, AGENT-003 |
+| BRIDGE-006 | Manejar timeout y fallos | COMPLETADA | BRIDGE-005 |
+| BRIDGE-007 | Controlar animación de escritura | COMPLETADA | BRIDGE-005 |
+| BRIDGE-008 | Implementar ACL configurable | COMPLETADA | BRIDGE-003 |
+| BRIDGE-009 | Añadir pruebas aisladas | COMPLETADA | BRIDGE-003–008 |
 
 ### Fase 5 — Integración y portabilidad
 
@@ -302,6 +302,20 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 - Commit: commit del agente; hash pendiente de registro al cierre.
 - Observaciones: la API solo se crea después de resolver el secreto.
 
+### BRIDGE-001 a BRIDGE-009
+
+- Inicio y cierre: 2026-07-15.
+- Responsable: Codex.
+- Comportamiento preservado: solo chats privados de texto; sesión persistente; JID
+  y LID admitidos; el estado de escritura se limpia en `finally`.
+- Archivos modificados: módulos del bridge, pruebas, Compose, changelog y seguimiento.
+- Pruebas: filtros, ACL abierta/cerrada, mapping, token HTTP, respuesta vacía,
+  éxito, fallo del agente y limpieza de escritura.
+- Comandos: suite `node --test` y `docker compose build wa-bridge`.
+- Resultado: 20 pruebas Node OK e imagen ARM64 construida.
+- Commit: commit del bridge; hash pendiente de registro al cierre.
+- Observaciones: el QR y una conversación real se validarán manualmente en TEST-005.
+
 ## Registro de comandos y resultados
 
 | Fecha | Tarea | Comando | Resultado |
@@ -315,6 +329,8 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | 2026-07-15 | SECRET-001–006 | `bash -n` y `python3 -m compileall` | OK |
 | 2026-07-15 | AGENT-001–006 | `pytest -q /app/tests` | 18 OK |
 | 2026-07-15 | AGENT-001–006 | `docker compose build agent` | OK, ARM64 |
+| 2026-07-15 | BRIDGE-003–009 | `node --test /app/test/*.test.js` | 20 OK |
+| 2026-07-15 | BRIDGE-001–009 | `docker compose build wa-bridge` | OK, ARM64 |
 
 ## Decisiones arquitectónicas
 

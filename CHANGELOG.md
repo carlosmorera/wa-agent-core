@@ -4,6 +4,9 @@
 
 ### Added — 2026-07-15
 
+- Bridge WhatsApp con sesión persistente, filtros de chat privado, soporte JID/LID,
+  ACL configurable, cliente autenticado del agente y respuesta de error controlada.
+- Animación de escritura con limpieza garantizada aun cuando el agente falle.
 - API FastAPI mínima en `agent/app/main.py`, autenticada mediante
   `X-Internal-Token`, con healthcheck y saludo personalizado.
 - Bootstrap del agente que resuelve el secreto antes de importar y abrir la API.
