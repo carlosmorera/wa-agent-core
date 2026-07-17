@@ -4,6 +4,10 @@
 
 ### Added — 2026-07-15
 
+- Redes separadas para conservar Floci y el agente aislados mientras el bridge mantiene
+  salida a WhatsApp Web; ejecución con UID/GID configurable para datos portables.
+- Recuperación segura de locks obsoletos de Chromium sin eliminar cookies ni datos de
+  autenticación de WhatsApp.
 - Bridge WhatsApp con sesión persistente, filtros de chat privado, soporte JID/LID,
   ACL configurable, cliente autenticado del agente y respuesta de error controlada.
 - Animación de escritura con limpieza garantizada aun cuando el agente falle.

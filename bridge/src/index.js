@@ -6,6 +6,7 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const { createAcl } = require('./acl');
 const { createAgentClient } = require('./agent-client');
 const { createMessageHandler } = require('./message-handler');
+const { clearStaleChromiumLocks } = require('./session-locks');
 
 function createWhatsAppClient(env = process.env) {
   return new Client({
@@ -20,6 +21,8 @@ function createWhatsAppClient(env = process.env) {
 
 async function start(env = process.env) {
   fs.rmSync('/tmp/wa-bridge.ready', { force: true });
+  const removedLocks = clearStaleChromiumLocks('/app/session');
+  if (removedLocks) console.info('chromium_stale_locks_removed', { count: removedLocks });
   const client = createWhatsAppClient(env);
   const handler = createMessageHandler({ agentClient: createAgentClient({ env }), acl: createAcl(env), env });
   client.on('qr', (qr) => {

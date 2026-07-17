@@ -124,11 +124,11 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | --- | --- | ---: | ---: | --- |
 | 0. Creación y seguimiento | COMPLETADA | 2 | 2 | Ninguno |
 | 1. Base del repositorio | COMPLETADA | 5 | 5 | Ninguno |
-| 2. Floci y secretos | EN PROGRESO | 8 | 11 | Validación de imágenes y persistencia real |
+| 2. Floci y secretos | EN PROGRESO | 10 | 11 | Validación runtime `amd64` pendiente |
 | 3. Agente mínimo | COMPLETADA | 6 | 6 | Ninguno |
 | 4. Bridge WhatsApp | COMPLETADA | 9 | 9 | QR reservado para smoke test manual |
-| 5. Integración y portabilidad | PENDIENTE | 0 | 9 | Fases 2–4 |
-| 6. Validación y cierre | PENDIENTE | 0 | 11 | Fases 1–5 |
+| 5. Integración y portabilidad | EN PROGRESO | 6 | 9 | Validación `amd64` y documentación operativa |
+| 6. Validación y cierre | EN PROGRESO | 3 | 11 | WhatsApp real y cierre documental |
 
 ## Registro de tareas
 
@@ -153,10 +153,10 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 
 | ID | Descripción | Estado | Dependencias |
 | --- | --- | --- | --- |
-| FLOCI-001 | Configurar Floci persistente y aislado | PENDIENTE | BASE-005 |
+| FLOCI-001 | Configurar Floci persistente y aislado | COMPLETADA | BASE-005 |
 | FLOCI-002 | Detectar `amd64` o `arm64` | COMPLETADA | BASE-001 |
 | FLOCI-003 | Usar imagen versionada en `amd64` | PENDIENTE | FLOCI-002 |
-| FLOCI-004 | Construir variante JVM para `arm64` | PENDIENTE | FLOCI-002 |
+| FLOCI-004 | Construir variante JVM para `arm64` | COMPLETADA | FLOCI-002 |
 | SECRET-001 | Implementar cliente Secrets Manager Node | COMPLETADA | FLOCI-001 |
 | SECRET-002 | Implementar cliente Secrets Manager Python | COMPLETADA | FLOCI-001 |
 | SECRET-003 | Crear bootstrap seguro e idempotente | COMPLETADA | SECRET-002 |
@@ -194,14 +194,14 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 
 | ID | Descripción | Estado | Dependencias |
 | --- | --- | --- | --- |
-| WIRE-001 | Ordenar Floci, validación, agente y bridge | PENDIENTE | Fases 2–4 |
-| WIRE-002 | Crear inicializador idempotente | PENDIENTE | SECRET-003–005 |
-| WIRE-003 | Configurar healthchecks y reinicios | PENDIENTE | WIRE-001 |
+| WIRE-001 | Ordenar Floci, validación, agente y bridge | COMPLETADA | Fases 2–4 |
+| WIRE-002 | Crear inicializador idempotente | COMPLETADA | SECRET-003–005 |
+| WIRE-003 | Configurar healthchecks y reinicios | COMPLETADA | WIRE-001 |
 | PORTABLE-001 | Validar `amd64` | PENDIENTE | WIRE-001–003 |
-| PORTABLE-002 | Validar Raspberry `arm64` | PENDIENTE | FLOCI-004, WIRE-001–003 |
-| PORTABLE-003 | Configurar límites de recursos | PENDIENTE | WIRE-001 |
+| PORTABLE-002 | Validar Raspberry `arm64` | COMPLETADA | FLOCI-004, WIRE-001–003 |
+| PORTABLE-003 | Configurar límites de recursos | COMPLETADA | WIRE-001 |
 | PORTABLE-004 | Documentar systemd opcional | PENDIENTE | WIRE-003 |
-| DATA-001 | Validar persistencia independiente | PENDIENTE | FLOCI-001, BRIDGE-002 |
+| DATA-001 | Validar persistencia independiente | COMPLETADA | FLOCI-001, BRIDGE-002 |
 | DATA-002 | Documentar backup y restauración | PENDIENTE | DATA-001 |
 
 ### Fase 6 — Validación y cierre
@@ -210,10 +210,10 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | --- | --- | --- | --- |
 | TEST-001 | Ejecutar pruebas Node | PENDIENTE | BRIDGE-009 |
 | TEST-002 | Ejecutar pruebas Python | PENDIENTE | AGENT-005, SECRET-002–004 |
-| TEST-003 | Validar Docker Compose | PENDIENTE | WIRE-003 |
-| TEST-004 | Comprobar bootstrap y persistencia | PENDIENTE | SECRET-003–005 |
+| TEST-003 | Validar Docker Compose | COMPLETADA | WIRE-003 |
+| TEST-004 | Comprobar bootstrap y persistencia | COMPLETADA | SECRET-003–005 |
 | TEST-005 | Ejecutar smoke test por WhatsApp | PENDIENTE | TEST-001–004 |
-| TEST-006 | Comprobar rotación y rechazo del token anterior | PENDIENTE | SECRET-006 |
+| TEST-006 | Comprobar rotación y rechazo del token anterior | COMPLETADA | SECRET-006 |
 | SEC-001 | Revisar archivos sensibles y logs | PENDIENTE | Todas las fases |
 | DOC-002 | Crear README operativo | PENDIENTE | Fases 1–5 |
 | DOC-003 | Crear arquitectura y diagramas | PENDIENTE | Fases 1–5 |
@@ -316,6 +316,38 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 - Commit: commit del bridge; hash pendiente de registro al cierre.
 - Observaciones: el QR y una conversación real se validarán manualmente en TEST-005.
 
+### FLOCI-001, FLOCI-004, WIRE-001–003, PORTABLE-002–003 y DATA-001
+
+- Inicio y cierre: 2026-07-15.
+- Responsable: Codex.
+- Comportamiento preservado: Floci y agente permanecen en red privada; solo el
+  bridge tiene salida a WhatsApp Web; volúmenes separados conservan secretos y sesión.
+- Archivos modificados: Compose, scripts de runtime, limpieza acotada de locks,
+  pruebas, changelog y seguimiento.
+- Pruebas: inicialización completa ARM64, healthchecks, persistencia tras reinicio,
+  fail-closed, conectividad a WhatsApp Web y generación de QR.
+- Comandos: `init-instance.sh`, `docker compose ps/logs/restart/run`, suite Node,
+  `docker compose config --quiet`.
+- Resultado: Floci y agente healthy; QR generado; 22 pruebas Node OK; secreto
+  persistente y red privada verificada.
+- Commit: commit de runtime; hash pendiente de registro al cierre.
+- Observaciones: la sesión temporal mezcló propietarios por pruebas con distintos UID;
+  una instalación limpia usa PUID/PGID consistentes desde el primer arranque.
+
+### TEST-003, TEST-004 y TEST-006
+
+- Inicio y cierre: 2026-07-15.
+- Responsable: Codex.
+- Comportamiento preservado: el bootstrap no sobrescribe en modo normal; una rotación
+  explícita invalida el token anterior.
+- Archivos modificados: ninguno adicional; validación de runtime.
+- Pruebas: Compose, bootstrap real, reinicio de Floci y rechazo `401` del token anterior.
+- Comandos: `docker compose config --quiet`, `secrets-validate`,
+  `rotate-internal-token.sh` y smoke HTTP autenticado.
+- Resultado: todas las verificaciones OK sin imprimir valores secretos.
+- Commit: evidencia registrada en el commit de runtime.
+- Observaciones: el archivo temporal con el token anterior fue eliminado al terminar.
+
 ## Registro de comandos y resultados
 
 | Fecha | Tarea | Comando | Resultado |
@@ -329,8 +361,13 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | 2026-07-15 | SECRET-001–006 | `bash -n` y `python3 -m compileall` | OK |
 | 2026-07-15 | AGENT-001–006 | `pytest -q /app/tests` | 18 OK |
 | 2026-07-15 | AGENT-001–006 | `docker compose build agent` | OK, ARM64 |
-| 2026-07-15 | BRIDGE-003–009 | `node --test /app/test/*.test.js` | 20 OK |
+| 2026-07-15 | BRIDGE-003–009 | `node --test /app/test/*.test.js` | 22 OK |
 | 2026-07-15 | BRIDGE-001–009 | `docker compose build wa-bridge` | OK, ARM64 |
+| 2026-07-15 | FLOCI-001, DATA-001 | Reinicio de Floci + `secrets-validate` | Persistencia OK |
+| 2026-07-15 | WIRE-001–003 | `init-instance.sh` y healthchecks | OK, ARM64 |
+| 2026-07-15 | TEST-005 parcial | Conexión a WhatsApp Web y QR | OK; escaneo pendiente |
+| 2026-07-15 | TEST-006 | Rotación y solicitud con token anterior | `401`, OK |
+| 2026-07-15 | SECRET-004 | Validación con secreto inexistente | Fail-closed OK |
 
 ## Decisiones arquitectónicas
 

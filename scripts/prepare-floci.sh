@@ -18,7 +18,12 @@ case "$ARCH" in
       exit 0
     fi
     mkdir -p "$(dirname "$FLOCI_CACHE_DIR")"
-    git clone --depth 1 --branch "$FLOCI_VERSION" "$FLOCI_REPO_URL" "$FLOCI_CACHE_DIR"
+    if [ -d "$FLOCI_CACHE_DIR/.git" ]; then
+      git -C "$FLOCI_CACHE_DIR" fetch --depth 1 origin "refs/tags/$FLOCI_VERSION:refs/tags/$FLOCI_VERSION"
+      git -C "$FLOCI_CACHE_DIR" checkout --detach "$FLOCI_VERSION"
+    else
+      git clone --depth 1 --branch "$FLOCI_VERSION" "$FLOCI_REPO_URL" "$FLOCI_CACHE_DIR"
+    fi
     docker build --build-arg "VERSION=$FLOCI_VERSION" -f "$FLOCI_CACHE_DIR/docker/Dockerfile" -t "$IMAGE" "$FLOCI_CACHE_DIR"
     echo "Configure FLOCI_IMAGE=$IMAGE en .env."
     ;;

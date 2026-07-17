@@ -10,6 +10,17 @@ if [ ! -f .env ]; then
   chmod 600 .env
 fi
 
+ARCH="$(uname -m)"
+CONFIGURED_FLOCI_IMAGE="$(sed -n 's/^FLOCI_IMAGE=//p' .env | head -1)"
+if [ -z "${FLOCI_IMAGE:-}" ]; then
+  case "$ARCH" in
+    aarch64|arm64) FLOCI_IMAGE="wa-agent-core-floci-arm64:${FLOCI_VERSION:-1.5.30}" ;;
+    *) FLOCI_IMAGE="${CONFIGURED_FLOCI_IMAGE:-floci/floci:${FLOCI_VERSION:-1.5.30}}" ;;
+  esac
+  export FLOCI_IMAGE
+fi
+sed -i "s#^FLOCI_IMAGE=.*#FLOCI_IMAGE=$FLOCI_IMAGE#" .env
+
 ./scripts/prepare-floci.sh
 docker compose up -d floci
 

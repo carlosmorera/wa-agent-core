@@ -29,6 +29,7 @@ services:
     build:
       context: ./agent
     restart: "no"
+    user: "${PUID:-1000}:${PGID:-1000}"
     command: ["python", "-m", "app.bootstrap_secrets", "--file", "/run/bootstrap/bootstrap.local.json"]
     environment: *aws-local-env
     volumes:
@@ -43,6 +44,7 @@ services:
     build:
       context: ./agent
     restart: "no"
+    user: "${PUID:-1000}:${PGID:-1000}"
     command: ["python", "-m", "app.validate_secrets"]
     environment: *aws-local-env
     depends_on:
@@ -55,6 +57,7 @@ services:
     build:
       context: ./agent
     restart: unless-stopped
+    user: "${PUID:-1000}:${PGID:-1000}"
     environment:
       <<: *aws-local-env
       TZ: ${TZ:-America/Bogota}
@@ -77,6 +80,7 @@ services:
     build:
       context: ./bridge
     restart: unless-stopped
+    user: "${PUID:-1000}:${PGID:-1000}"
     init: true
     environment:
       <<: *aws-local-env
@@ -89,6 +93,9 @@ services:
       TYPING_ENABLED: ${TYPING_ENABLED:-1}
       TYPING_MIN_MS: ${TYPING_MIN_MS:-600}
       PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
+      HOME: /tmp
+      XDG_CONFIG_HOME: /tmp
+      XDG_CACHE_HOME: /tmp
     volumes:
       - ./data/whatsapp-session:/app/session
     depends_on:
@@ -102,8 +109,10 @@ services:
       start_period: 60s
     networks:
       - internal
+      - egress
     mem_limit: ${BRIDGE_MEMORY_LIMIT:-1g}
 
 networks:
   internal:
     internal: true
+  egress:

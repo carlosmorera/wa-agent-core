@@ -9,6 +9,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch((error) => {
-  console.error('bridge_startup_failed', { reason: String(error?.message || 'unknown') });
+  console.error('bridge_startup_failed', { reason: String(error?.name || 'startup_error') });
   process.exitCode = 1;
 });
