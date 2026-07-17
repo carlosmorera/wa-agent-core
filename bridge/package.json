@@ -1,0 +1,18 @@
+{
+  "name": "wa-agent-core-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minimal WhatsApp bridge for wa-agent-core",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/bootstrap.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "qrcode-terminal": "0.12.0",
+    "whatsapp-web.js": "1.34.6"
+  }
+}

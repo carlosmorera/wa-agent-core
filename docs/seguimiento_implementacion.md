@@ -123,7 +123,7 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | Fase | Estado | Completadas | Total | Bloqueos |
 | --- | --- | ---: | ---: | --- |
 | 0. Creación y seguimiento | COMPLETADA | 2 | 2 | Ninguno |
-| 1. Base del repositorio | PENDIENTE | 0 | 5 | Fase 0 |
+| 1. Base del repositorio | COMPLETADA | 5 | 5 | Ninguno |
 | 2. Floci y secretos | PENDIENTE | 0 | 11 | Fase 1 |
 | 3. Agente mínimo | PENDIENTE | 0 | 6 | Fase 2 |
 | 4. Bridge WhatsApp | PENDIENTE | 0 | 9 | Fases 2 y 3 |
@@ -143,11 +143,11 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 
 | ID | Descripción | Estado | Dependencias |
 | --- | --- | --- | --- |
-| BASE-001 | Crear estructura de bridge, agente, scripts, secretos, pruebas y datos | PENDIENTE | DOC-001 |
-| BASE-002 | Configurar `.gitignore` para secretos, sesiones y datos | PENDIENTE | BASE-001 |
-| BASE-003 | Crear `.env.example` sin valores sensibles | PENDIENTE | BASE-001 |
-| BASE-004 | Fijar versiones de runtimes y dependencias | PENDIENTE | BASE-001 |
-| BASE-005 | Crear y validar Compose inicial | PENDIENTE | BASE-002–004 |
+| BASE-001 | Crear estructura de bridge, agente, scripts, secretos, pruebas y datos | COMPLETADA | DOC-001 |
+| BASE-002 | Configurar `.gitignore` para secretos, sesiones y datos | COMPLETADA | BASE-001 |
+| BASE-003 | Crear `.env.example` sin valores sensibles | COMPLETADA | BASE-001 |
+| BASE-004 | Fijar versiones de runtimes y dependencias | COMPLETADA | BASE-001 |
+| BASE-005 | Crear y validar Compose inicial | COMPLETADA | BASE-002–004 |
 
 ### Fase 2 — Floci y Secret Manager
 
@@ -254,12 +254,30 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 - Commit: este primer commit; el hash se registrará durante el cierre documental.
 - Observaciones: `CHANGELOG.md` no se crea en esta fase.
 
+### BASE-001 a BASE-005
+
+- Inicio y cierre: 2026-07-15.
+- Responsable: Codex.
+- Comportamiento preservado: repositorio independiente, sin secretos ni código de
+  negocio; servicios aislados en una red interna.
+- Archivos modificados: `.gitignore`, `.dockerignore`, `.env.example`,
+  `docker-compose.yaml`, manifiestos y Dockerfiles de `agent/` y `bridge/`, más
+  directorios persistentes y ejemplos seguros.
+- Pruebas: validación estructural de Compose y búsqueda de patrones sensibles.
+- Comandos: `docker compose config --quiet`, `rg`, `git status --short`.
+- Resultado: Compose válido; no se detectaron valores sensibles.
+- Commit: commit de estructura base; hash pendiente de registro al cierre.
+- Observaciones: las imágenes aún no se construyen porque el código se incorpora en
+  las fases siguientes.
+
 ## Registro de comandos y resultados
 
 | Fecha | Tarea | Comando | Resultado |
 | --- | --- | --- | --- |
 | 2026-07-15 | INIT-001 | `git init -b main` | OK |
 | 2026-07-15 | DOC-001 | `git status`, revisión de diff y búsqueda sensible | OK |
+| 2026-07-15 | BASE-001–005 | `docker compose config --quiet` | OK |
+| 2026-07-15 | BASE-002–003 | Búsqueda de patrones sensibles con `rg` | OK |
 
 ## Decisiones arquitectónicas
 

@@ -1,0 +1,103 @@
+name: wa-agent-core
+
+x-aws-local-env: &aws-local-env
+  FLOCI_AWS_ENDPOINT_URL: ${FLOCI_AWS_ENDPOINT_URL:-http://floci:4566}
+  AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
+  INSTANCE_ID: ${INSTANCE_ID:-local}
+  SECRET_INTERNAL_API_TOKEN_NAME: ${SECRET_INTERNAL_API_TOKEN_NAME:-wa-agent-core/local/internal-api-token}
+
+services:
+  floci:
+    image: ${FLOCI_IMAGE:-floci/floci:1.5.30}
+    restart: unless-stopped
+    expose:
+      - "4566"
+    environment:
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      FLOCI_STORAGE_MODE: ${FLOCI_STORAGE_MODE:-persistent}
+      FLOCI_STORAGE_PERSISTENT_PATH: ${FLOCI_STORAGE_PERSISTENT_PATH:-/app/data}
+    volumes:
+      - ./data/floci:/app/data
+    networks:
+      - internal
+    mem_limit: ${FLOCI_MEMORY_LIMIT:-384m}
+
+  secrets-bootstrap:
+    profiles: ["tools"]
+    build:
+      context: ./agent
+    restart: "no"
+    command: ["python", "-m", "app.bootstrap_secrets", "--file", "/run/bootstrap/bootstrap.local.json"]
+    environment: *aws-local-env
+    volumes:
+      - ./secrets:/run/bootstrap:ro
+    depends_on:
+      floci:
+        condition: service_started
+    networks:
+      - internal
+
+  secrets-validate:
+    build:
+      context: ./agent
+    restart: "no"
+    command: ["python", "-m", "app.validate_secrets"]
+    environment: *aws-local-env
+    depends_on:
+      floci:
+        condition: service_started
+    networks:
+      - internal
+
+  agent:
+    build:
+      context: ./agent
+    restart: unless-stopped
+    environment:
+      <<: *aws-local-env
+      TZ: ${TZ:-America/Bogota}
+    expose:
+      - "8000"
+    depends_on:
+      secrets-validate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - internal
+    mem_limit: ${AGENT_MEMORY_LIMIT:-256m}
+
+  wa-bridge:
+    build:
+      context: ./bridge
+    restart: unless-stopped
+    init: true
+    environment:
+      <<: *aws-local-env
+      TZ: ${TZ:-America/Bogota}
+      AGENT_URL: ${AGENT_URL:-http://agent:8000}
+      AGENT_REQUEST_TIMEOUT_MS: ${AGENT_REQUEST_TIMEOUT_MS:-30000}
+      BRIDGE_ACL_MODE: ${BRIDGE_ACL_MODE:-open}
+      BRIDGE_ALLOWED_NUMBERS: ${BRIDGE_ALLOWED_NUMBERS:-}
+      BRIDGE_ERROR_REPLY: ${BRIDGE_ERROR_REPLY:-No pude responder en este momento. Intenta de nuevo.}
+      TYPING_ENABLED: ${TYPING_ENABLED:-1}
+      TYPING_MIN_MS: ${TYPING_MIN_MS:-600}
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
+    volumes:
+      - ./data/whatsapp-session:/app/session
+    depends_on:
+      agent:
+        condition: service_healthy
+    networks:
+      - internal
+    mem_limit: ${BRIDGE_MEMORY_LIMIT:-1g}
+
+networks:
+  internal:
+    internal: true

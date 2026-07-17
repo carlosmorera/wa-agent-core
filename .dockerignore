@@ -1,0 +1,9 @@
+.git
+.env
+secrets/
+data/
+node_modules/
+__pycache__/
+.pytest_cache/
+coverage/
+docs/
