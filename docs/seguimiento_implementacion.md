@@ -6,7 +6,7 @@
 - Ruta objetivo: `/home/ubuntu/wa-agent-core`
 - Inicio: 2026-07-15
 - Responsable inicial: Codex
-- Estado general: `EN PROGRESO`
+- Estado general: `EN PROGRESO` — implementación terminada; validaciones externas pendientes
 - Repositorio: privado, local y sin remoto configurado
 
 Este documento es la fuente oficial de seguimiento. Una tarea solo podrá marcarse
@@ -127,8 +127,8 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | 2. Floci y secretos | EN PROGRESO | 10 | 11 | Validación runtime `amd64` pendiente |
 | 3. Agente mínimo | COMPLETADA | 6 | 6 | Ninguno |
 | 4. Bridge WhatsApp | COMPLETADA | 9 | 9 | QR reservado para smoke test manual |
-| 5. Integración y portabilidad | EN PROGRESO | 6 | 9 | Validación `amd64` y documentación operativa |
-| 6. Validación y cierre | EN PROGRESO | 3 | 11 | WhatsApp real y cierre documental |
+| 5. Integración y portabilidad | EN PROGRESO | 8 | 9 | Validación runtime `amd64` |
+| 6. Validación y cierre | EN PROGRESO | 10 | 11 | Mensaje real tras escanear QR |
 
 ## Registro de tareas
 
@@ -200,25 +200,25 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | PORTABLE-001 | Validar `amd64` | PENDIENTE | WIRE-001–003 |
 | PORTABLE-002 | Validar Raspberry `arm64` | COMPLETADA | FLOCI-004, WIRE-001–003 |
 | PORTABLE-003 | Configurar límites de recursos | COMPLETADA | WIRE-001 |
-| PORTABLE-004 | Documentar systemd opcional | PENDIENTE | WIRE-003 |
+| PORTABLE-004 | Documentar systemd opcional | COMPLETADA | WIRE-003 |
 | DATA-001 | Validar persistencia independiente | COMPLETADA | FLOCI-001, BRIDGE-002 |
-| DATA-002 | Documentar backup y restauración | PENDIENTE | DATA-001 |
+| DATA-002 | Documentar backup y restauración | COMPLETADA | DATA-001 |
 
 ### Fase 6 — Validación y cierre
 
 | ID | Descripción | Estado | Dependencias |
 | --- | --- | --- | --- |
-| TEST-001 | Ejecutar pruebas Node | PENDIENTE | BRIDGE-009 |
-| TEST-002 | Ejecutar pruebas Python | PENDIENTE | AGENT-005, SECRET-002–004 |
+| TEST-001 | Ejecutar pruebas Node | COMPLETADA | BRIDGE-009 |
+| TEST-002 | Ejecutar pruebas Python | COMPLETADA | AGENT-005, SECRET-002–004 |
 | TEST-003 | Validar Docker Compose | COMPLETADA | WIRE-003 |
 | TEST-004 | Comprobar bootstrap y persistencia | COMPLETADA | SECRET-003–005 |
 | TEST-005 | Ejecutar smoke test por WhatsApp | PENDIENTE | TEST-001–004 |
 | TEST-006 | Comprobar rotación y rechazo del token anterior | COMPLETADA | SECRET-006 |
-| SEC-001 | Revisar archivos sensibles y logs | PENDIENTE | Todas las fases |
-| DOC-002 | Crear README operativo | PENDIENTE | Fases 1–5 |
-| DOC-003 | Crear arquitectura y diagramas | PENDIENTE | Fases 1–5 |
-| DOC-004 | Crear y mantener `CHANGELOG.md` para código | PENDIENTE | Primer cambio de código |
-| DOC-005 | Cerrar seguimiento con evidencias | PENDIENTE | TEST-001–006, SEC-001, DOC-002–004 |
+| SEC-001 | Revisar archivos sensibles y logs | COMPLETADA | Todas las fases |
+| DOC-002 | Crear README operativo | COMPLETADA | Fases 1–5 |
+| DOC-003 | Crear arquitectura y diagramas | COMPLETADA | Fases 1–5 |
+| DOC-004 | Crear y mantener `CHANGELOG.md` para código | COMPLETADA | Primer cambio de código |
+| DOC-005 | Cerrar seguimiento con evidencias y limitaciones | COMPLETADA | TEST-001–004, TEST-006, SEC-001, DOC-002–004 |
 
 ## Criterios de aceptación finales
 
@@ -348,6 +348,40 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 - Commit: evidencia registrada en el commit de runtime.
 - Observaciones: el archivo temporal con el token anterior fue eliminado al terminar.
 
+### PORTABLE-004, DATA-002 y DOC-002 a DOC-005
+
+- Inicio y cierre: 2026-07-15.
+- Responsable: Codex.
+- Comportamiento preservado: operación reproducible sin incluir secretos, sesiones ni
+  datos persistentes en la documentación.
+- Archivos modificados: `README.md`, `docs/architecture.md`, unidad systemd,
+  changelog y este seguimiento.
+- Pruebas: render lógico de diagramas, `systemd-analyze verify`, validación Compose y
+  revisión cruzada de comandos/rutas.
+- Comandos: `systemd-analyze verify`, `docker compose config --quiet`, `bash -n`.
+- Resultado: documentación operativa, arquitectura, backup/restauración y systemd
+  registrados. La verificación systemd aceptó la unidad y emitió advertencias del host
+  ajenas al archivo.
+- Commit: commit documental final; consultar la tabla de commits.
+- Observaciones: PORTABLE-001 y TEST-005 requieren hardware/interacción externa.
+
+### TEST-001, TEST-002 y SEC-001
+
+- Inicio y cierre: 2026-07-15.
+- Responsable: Codex.
+- Comportamiento preservado: pruebas deterministas sin red real salvo smoke controlado
+  de Floci y WhatsApp Web.
+- Archivos modificados: seguimiento y documentación de ejecución.
+- Pruebas: regresiones Node/Python, build de imágenes, auditoría NPM, `pip check`,
+  búsqueda de secretos y revisión de archivos ignorados.
+- Comandos: `node --test`, `pytest`, `npm audit`, `pip check`, `git grep`,
+  `git check-ignore`.
+- Resultado: 22 pruebas Node y 18 Python OK; 0 vulnerabilidades NPM; dependencias
+  Python consistentes; ningún secreto o dato persistente versionado.
+- Commit: commit de validación y documentación final.
+- Observaciones: `whatsapp-web.js` emite avisos de paquetes transitivos deprecados al
+  instalar, pero `npm audit` no reportó vulnerabilidades.
+
 ## Registro de comandos y resultados
 
 | Fecha | Tarea | Comando | Resultado |
@@ -368,6 +402,24 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | 2026-07-15 | TEST-005 parcial | Conexión a WhatsApp Web y QR | OK; escaneo pendiente |
 | 2026-07-15 | TEST-006 | Rotación y solicitud con token anterior | `401`, OK |
 | 2026-07-15 | SECRET-004 | Validación con secreto inexistente | Fail-closed OK |
+| 2026-07-15 | TEST-001 | Suite Node final | 22 OK |
+| 2026-07-15 | TEST-002 | Suite Python final | 18 OK |
+| 2026-07-15 | SEC-001 | `npm audit --audit-level=high` | 0 vulnerabilidades |
+| 2026-07-15 | SEC-001 | `pip check` | Sin dependencias rotas |
+| 2026-07-15 | SEC-001 | `git grep` y `git check-ignore` | Sin secretos versionados |
+
+## Commits de implementación
+
+| Commit | Entrega |
+| --- | --- |
+| `6c29941` | Seguimiento inicial exclusivamente documental |
+| `5d61b81` | Estructura base y Compose |
+| `2fd3abd` | Floci Secrets Manager y rotación |
+| `99d7bb5` | Agente FastAPI autenticado |
+| `97fb2e1` | Bridge WhatsApp y escritura |
+| `d93aa4b` | Runtime ARM64, redes y persistencia |
+| `e52b194` | Dependencias Node reproducibles |
+| Este commit | Validación final y documentación operativa |
 
 ## Decisiones arquitectónicas
 
@@ -389,7 +441,11 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 
 ## Cierre del proyecto
 
-- Fecha: pendiente.
-- Commit final: pendiente.
-- Resultado global: pendiente.
-- Limitaciones residuales: pendiente.
+- Fecha de entrega técnica: 2026-07-15.
+- Commit final: commit documental que contiene este cierre.
+- Resultado global: implementación completa y validada en `linux/arm64`; Floci,
+  bootstrap, agente, bridge, QR, rotación y persistencia comprobados.
+- Limitaciones residuales:
+  - `FLOCI-003` y `PORTABLE-001`: ejecutar el mismo smoke test en un host `amd64`.
+  - `TEST-005`: escanear el QR y enviar un mensaje privado real para comprobar la
+    respuesta y animación desde el teléfono.
