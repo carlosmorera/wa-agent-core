@@ -4,6 +4,7 @@
 
 ### Added — 2026-07-15
 
+- Lockfile reproducible del bridge y construcción mediante `npm ci`.
 - Redes separadas para conservar Floci y el agente aislados mientras el bridge mantiene
   salida a WhatsApp Web; ejecución con UID/GID configurable para datos portables.
 - Recuperación segura de locks obsoletos de Chromium sin eliminar cookies ni datos de
