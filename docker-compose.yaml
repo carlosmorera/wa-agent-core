@@ -6,7 +6,7 @@ x-aws-local-env: &aws-local-env
   AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
   AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
   INSTANCE_ID: ${INSTANCE_ID:-local}
-  SECRET_INTERNAL_API_TOKEN_NAME: ${SECRET_INTERNAL_API_TOKEN_NAME:-wa-agent-core/local/internal-api-token}
+  SECRET_INTERNAL_API_TOKEN_NAME: ${SECRET_INTERNAL_API_TOKEN_NAME:-}
 
 services:
   floci:

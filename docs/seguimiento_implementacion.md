@@ -124,7 +124,7 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | --- | --- | ---: | ---: | --- |
 | 0. Creación y seguimiento | COMPLETADA | 2 | 2 | Ninguno |
 | 1. Base del repositorio | COMPLETADA | 5 | 5 | Ninguno |
-| 2. Floci y secretos | PENDIENTE | 0 | 11 | Fase 1 |
+| 2. Floci y secretos | EN PROGRESO | 8 | 11 | Validación de imágenes y persistencia real |
 | 3. Agente mínimo | PENDIENTE | 0 | 6 | Fase 2 |
 | 4. Bridge WhatsApp | PENDIENTE | 0 | 9 | Fases 2 y 3 |
 | 5. Integración y portabilidad | PENDIENTE | 0 | 9 | Fases 2–4 |
@@ -154,16 +154,16 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | ID | Descripción | Estado | Dependencias |
 | --- | --- | --- | --- |
 | FLOCI-001 | Configurar Floci persistente y aislado | PENDIENTE | BASE-005 |
-| FLOCI-002 | Detectar `amd64` o `arm64` | PENDIENTE | BASE-001 |
+| FLOCI-002 | Detectar `amd64` o `arm64` | COMPLETADA | BASE-001 |
 | FLOCI-003 | Usar imagen versionada en `amd64` | PENDIENTE | FLOCI-002 |
 | FLOCI-004 | Construir variante JVM para `arm64` | PENDIENTE | FLOCI-002 |
-| SECRET-001 | Implementar cliente Secrets Manager Node | PENDIENTE | FLOCI-001 |
-| SECRET-002 | Implementar cliente Secrets Manager Python | PENDIENTE | FLOCI-001 |
-| SECRET-003 | Crear bootstrap seguro e idempotente | PENDIENTE | SECRET-002 |
-| SECRET-004 | Crear validación fail-closed | PENDIENTE | SECRET-002 |
-| SECRET-005 | Generar token sin sobrescribir uno existente | PENDIENTE | SECRET-003 |
-| SECRET-006 | Implementar rotación coordinada | PENDIENTE | SECRET-001–005 |
-| SECRET-007 | Auditar que no se expongan secretos | PENDIENTE | SECRET-001–006 |
+| SECRET-001 | Implementar cliente Secrets Manager Node | COMPLETADA | FLOCI-001 |
+| SECRET-002 | Implementar cliente Secrets Manager Python | COMPLETADA | FLOCI-001 |
+| SECRET-003 | Crear bootstrap seguro e idempotente | COMPLETADA | SECRET-002 |
+| SECRET-004 | Crear validación fail-closed | COMPLETADA | SECRET-002 |
+| SECRET-005 | Generar token sin sobrescribir uno existente | COMPLETADA | SECRET-003 |
+| SECRET-006 | Implementar rotación coordinada | COMPLETADA | SECRET-001–005 |
+| SECRET-007 | Auditar que no se expongan secretos | COMPLETADA | SECRET-001–006 |
 
 ### Fase 3 — Agente mínimo
 
@@ -270,6 +270,23 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 - Observaciones: las imágenes aún no se construyen porque el código se incorpora en
   las fases siguientes.
 
+### FLOCI-002 y SECRET-001 a SECRET-007
+
+- Inicio y cierre: 2026-07-15.
+- Responsable: Codex.
+- Comportamiento preservado: el token no tiene fallback a variables planas; el
+  bootstrap normal conserva secretos existentes y la rotación exige modo explícito.
+- Archivos modificados: providers Node/Python, bootstrap, validación, scripts de
+  preparación/inicialización/rotación, tests y `CHANGELOG.md`.
+- Pruebas: 8 pruebas Python, 3 pruebas Node, validación de sintaxis shell,
+  compilación Python y configuración Compose.
+- Comandos: `pytest -q`, `bash -n`, `python3 -m compileall`,
+  `docker compose config --quiet`.
+- Resultado: 8 pruebas Python y 3 pruebas Node OK; verificaciones estáticas OK.
+- Commit: commit de Secrets Manager; hash pendiente de registro al cierre.
+- Observaciones: FLOCI-001, FLOCI-003 y FLOCI-004 permanecen pendientes hasta
+  comprobar el contenedor y su persistencia real.
+
 ## Registro de comandos y resultados
 
 | Fecha | Tarea | Comando | Resultado |
@@ -278,6 +295,9 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | 2026-07-15 | DOC-001 | `git status`, revisión de diff y búsqueda sensible | OK |
 | 2026-07-15 | BASE-001–005 | `docker compose config --quiet` | OK |
 | 2026-07-15 | BASE-002–003 | Búsqueda de patrones sensibles con `rg` | OK |
+| 2026-07-15 | SECRET-002–005 | `pytest -q /app/tests` | 8 OK |
+| 2026-07-15 | SECRET-001 | `node --test runtime-secrets.test.js` | 3 OK |
+| 2026-07-15 | SECRET-001–006 | `bash -n` y `python3 -m compileall` | OK |
 
 ## Decisiones arquitectónicas
 
