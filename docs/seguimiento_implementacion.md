@@ -125,7 +125,7 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | 0. Creación y seguimiento | COMPLETADA | 2 | 2 | Ninguno |
 | 1. Base del repositorio | COMPLETADA | 5 | 5 | Ninguno |
 | 2. Floci y secretos | EN PROGRESO | 8 | 11 | Validación de imágenes y persistencia real |
-| 3. Agente mínimo | PENDIENTE | 0 | 6 | Fase 2 |
+| 3. Agente mínimo | COMPLETADA | 6 | 6 | Ninguno |
 | 4. Bridge WhatsApp | PENDIENTE | 0 | 9 | Fases 2 y 3 |
 | 5. Integración y portabilidad | PENDIENTE | 0 | 9 | Fases 2–4 |
 | 6. Validación y cierre | PENDIENTE | 0 | 11 | Fases 1–5 |
@@ -169,12 +169,12 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 
 | ID | Descripción | Estado | Dependencias |
 | --- | --- | --- | --- |
-| AGENT-001 | Crear FastAPI y healthcheck | PENDIENTE | BASE-004 |
-| AGENT-002 | Autenticar con `X-Internal-Token` | PENDIENTE | SECRET-002 |
-| AGENT-003 | Implementar `POST /v1/messages` | PENDIENTE | AGENT-001–002 |
-| AGENT-004 | Responder saludo personalizado o fallback | PENDIENTE | AGENT-003 |
-| AGENT-005 | Probar autenticación, validación y saludo | PENDIENTE | AGENT-001–004 |
-| AGENT-006 | Impedir arranque sin secreto | PENDIENTE | SECRET-004, AGENT-002 |
+| AGENT-001 | Crear FastAPI y healthcheck | COMPLETADA | BASE-004 |
+| AGENT-002 | Autenticar con `X-Internal-Token` | COMPLETADA | SECRET-002 |
+| AGENT-003 | Implementar `POST /v1/messages` | COMPLETADA | AGENT-001–002 |
+| AGENT-004 | Responder saludo personalizado o fallback | COMPLETADA | AGENT-003 |
+| AGENT-005 | Probar autenticación, validación y saludo | COMPLETADA | AGENT-001–004 |
+| AGENT-006 | Impedir arranque sin secreto | COMPLETADA | SECRET-004, AGENT-002 |
 
 ### Fase 4 — Bridge WhatsApp
 
@@ -287,6 +287,21 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 - Observaciones: FLOCI-001, FLOCI-003 y FLOCI-004 permanecen pendientes hasta
   comprobar el contenedor y su persistencia real.
 
+### AGENT-001 a AGENT-006
+
+- Inicio y cierre: 2026-07-15.
+- Responsable: Codex.
+- Comportamiento preservado: contrato HTTP establecido, comparación de token en
+  tiempo constante y ausencia de fallback inseguro.
+- Archivos modificados: `agent/app/main.py`, `agent/app/bootstrap.py`, pruebas,
+  changelog y seguimiento.
+- Pruebas: healthcheck, autenticación ausente/incorrecta, saludo personalizado,
+  fallback, normalización, payload inválido y token runtime vacío.
+- Comandos: `docker compose build agent`, `pytest -q /app/tests`.
+- Resultado: imagen ARM64 construida y 18 pruebas Python OK.
+- Commit: commit del agente; hash pendiente de registro al cierre.
+- Observaciones: la API solo se crea después de resolver el secreto.
+
 ## Registro de comandos y resultados
 
 | Fecha | Tarea | Comando | Resultado |
@@ -298,6 +313,8 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | 2026-07-15 | SECRET-002–005 | `pytest -q /app/tests` | 8 OK |
 | 2026-07-15 | SECRET-001 | `node --test runtime-secrets.test.js` | 3 OK |
 | 2026-07-15 | SECRET-001–006 | `bash -n` y `python3 -m compileall` | OK |
+| 2026-07-15 | AGENT-001–006 | `pytest -q /app/tests` | 18 OK |
+| 2026-07-15 | AGENT-001–006 | `docker compose build agent` | OK, ARM64 |
 
 ## Decisiones arquitectónicas
 
