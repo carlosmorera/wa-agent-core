@@ -33,12 +33,17 @@ Use `id -u` e `id -g` para conocer el UID/GID del operador. Luego ejecute:
 
 ```bash
 ./scripts/init-instance.sh
-docker compose logs -f wa-bridge
+./scripts/show-qr.sh
 ```
 
-Escanee el QR desde WhatsApp. `init-instance.sh` detecta la arquitectura, prepara
-Floci, genera un token de 256 bits si no existe, lo aprovisiona sin sobrescribir un
-secreto previo y levanta los servicios en orden.
+Escanee el QR desde WhatsApp. El PNG temporal usa permisos `0600`; `show-qr.sh` abre
+una pagina local, refresca automaticamente los QR rotados y elimina su copia al
+terminar. El bridge elimina la suya al completar la vinculacion, fallar la
+autenticacion o desconectarse. El QR nunca se escribe en logs.
+
+`init-instance.sh` detecta la arquitectura, espera el healthcheck nativo de Floci,
+genera un token de 256 bits si no existe, lo aprovisiona sin sobrescribir un secreto
+previo y levanta los servicios en orden.
 
 En Raspberry ARM64, el primer arranque compila la variante JVM fijada de Floci. En
 `amd64` usa la imagen versionada configurada por Compose.
@@ -107,7 +112,13 @@ docker compose run --rm secrets-validate
 ```
 
 La rotación actualiza el secreto y reinicia coordinadamente agente y bridge. No
-imprime el valor anterior ni el nuevo.
+imprime el valor anterior ni el nuevo. Tanto inicializacion como rotacion respetan
+`SECRET_INTERNAL_API_TOKEN_NAME`; si queda vacio usan el nombre derivado de
+`INSTANCE_ID`.
+
+`AGENT_REQUEST_TIMEOUT_MS` debe estar entre `1` y `120000`. `TYPING_MIN_MS` debe
+estar entre `0` y `60000`, y `TYPING_ENABLED` solo admite `0` o `1`. Una configuracion
+invalida detiene el bridge antes de conectar con WhatsApp.
 
 ### Backup
 
@@ -142,10 +153,20 @@ docker compose run --rm --no-deps \
   sh -lc 'node --test /app/test/*.test.js'
 
 docker compose config --quiet
+./scripts/test-runtime-config.sh
 ```
 
 La prueba final de WhatsApp requiere escanear el QR y enviar un mensaje privado desde
 otro número.
+
+### Compatibilidad WhatsApp Web
+
+El cache local de `whatsapp-web.js` debe permanecer en
+`/tmp/wa-bridge-web-cache`: `/app` no es escribible para el usuario del bridge y un
+cache relativo impide alcanzar `ready`. Si WhatsApp no permite resolver el chat para
+mostrar typing, el bridge continua sin animacion y responde normalmente. El plan de
+mejoras posteriores esta en
+[docs/deferred-improvements.md](docs/deferred-improvements.md).
 
 ## Seguridad y límites
 

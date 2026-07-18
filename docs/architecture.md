@@ -55,6 +55,7 @@ sequenceDiagram
     participant B as wa-bridge
 
     I->>F: iniciar almacenamiento persistente
+    F-->>I: healthcheck listo
     I->>P: crear secreto si no existe
     P->>F: CreateSecret
     I->>V: validar secreto requerido
@@ -70,6 +71,10 @@ El agente importa y crea FastAPI después de resolver el token. El bridge carga 
 token antes de importar el cliente de WhatsApp. Cualquier fallo termina el proceso y
 activa la política de reinicio; nunca existe fallback a un token plano.
 
+Inicializacion y rotacion resuelven `SECRET_INTERNAL_API_TOKEN_NAME` con la misma
+precedencia que los consumidores. Si no se configura, usan
+`wa-agent-core/{INSTANCE_ID}/internal-api-token`.
+
 ## Persistencia
 
 - `data/floci`: estado de Secrets Manager. No usar modo memoria en operación real.
@@ -79,6 +84,16 @@ activa la política de reinicio; nunca existe fallback a un token plano.
 
 Los locks `SingletonLock`, `SingletonSocket` y `SingletonCookie` obsoletos se eliminan
 antes de iniciar Chromium. No se eliminan cookies, IndexedDB ni datos de autenticación.
+
+El QR se renderiza como PNG en `/tmp/wa-bridge.qr.png` con permisos `0600` y solo se
+consulta mediante `scripts/show-qr.sh`. El script mantiene una copia local temporal,
+la refresca sin publicar puertos y la elimina al terminar. El bridge elimina su copia
+al alcanzar `ready`, ante fallo de autenticacion o al desconectarse. Los logs solo
+indican que hay un QR disponible.
+
+El cache Web requerido por `whatsapp-web.js` vive en `/tmp/wa-bridge-web-cache`. No
+debe volver a una ruta relativa bajo `/app`, porque el bridge ejecuta como usuario no
+root y fallaria despues de `authenticated` antes de emitir `ready`.
 
 ## Portabilidad
 
@@ -94,4 +109,5 @@ cambiar Compose.
 - Sin puertos públicos en el MVP.
 - Floci solo se usa como Secrets Manager.
 - Rotación con reinicio coordinado, sin ventana de doble token.
+- El QR se entrega por un archivo efimero interno, nunca por logs.
 - El QR y el mensaje real son verificaciones manuales.

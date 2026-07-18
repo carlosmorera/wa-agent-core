@@ -11,6 +11,16 @@ test('derives the secret name from the instance id', () => {
   );
 });
 
+test('prefers the configured secret name', () => {
+  assert.equal(
+    internalTokenSecretName({
+      INSTANCE_ID: 'ignored',
+      SECRET_INTERNAL_API_TOKEN_NAME: 'custom/team/internal-token',
+    }),
+    'custom/team/internal-token',
+  );
+});
+
 test('loads the token into runtime environment', async () => {
   const env = { INSTANCE_ID: 'local' };
   const client = { getSecretString: async () => 'private' };

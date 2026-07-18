@@ -6,8 +6,8 @@
 - Ruta objetivo: `/home/ubuntu/wa-agent-core`
 - Inicio: 2026-07-15
 - Responsable inicial: Codex
-- Estado general: `EN PROGRESO` — implementación terminada; validaciones externas pendientes
-- Repositorio: privado, local y sin remoto configurado
+- Estado general: `COMPLETADA` — implementación y validación operativa cerradas
+- Repositorio: privado con remoto `origin` configurado
 
 Este documento es la fuente oficial de seguimiento. Una tarea solo podrá marcarse
 `COMPLETADA` cuando incluya evidencia verificable. Los estados permitidos son
@@ -124,11 +124,11 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | --- | --- | ---: | ---: | --- |
 | 0. Creación y seguimiento | COMPLETADA | 2 | 2 | Ninguno |
 | 1. Base del repositorio | COMPLETADA | 5 | 5 | Ninguno |
-| 2. Floci y secretos | EN PROGRESO | 10 | 11 | Validación runtime `amd64` pendiente |
+| 2. Floci y secretos | COMPLETADA | 11 | 11 | Ninguno |
 | 3. Agente mínimo | COMPLETADA | 6 | 6 | Ninguno |
-| 4. Bridge WhatsApp | COMPLETADA | 9 | 9 | QR reservado para smoke test manual |
-| 5. Integración y portabilidad | EN PROGRESO | 8 | 9 | Validación runtime `amd64` |
-| 6. Validación y cierre | EN PROGRESO | 10 | 11 | Mensaje real tras escanear QR |
+| 4. Bridge WhatsApp | COMPLETADA | 9 | 9 | Ninguno |
+| 5. Integración y portabilidad | COMPLETADA | 9 | 9 | Ninguno |
+| 6. Validación y cierre | COMPLETADA | 11 | 11 | Ninguno |
 
 ## Registro de tareas
 
@@ -155,7 +155,7 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | --- | --- | --- | --- |
 | FLOCI-001 | Configurar Floci persistente y aislado | COMPLETADA | BASE-005 |
 | FLOCI-002 | Detectar `amd64` o `arm64` | COMPLETADA | BASE-001 |
-| FLOCI-003 | Usar imagen versionada en `amd64` | PENDIENTE | FLOCI-002 |
+| FLOCI-003 | Usar imagen versionada en `amd64` | COMPLETADA | FLOCI-002 |
 | FLOCI-004 | Construir variante JVM para `arm64` | COMPLETADA | FLOCI-002 |
 | SECRET-001 | Implementar cliente Secrets Manager Node | COMPLETADA | FLOCI-001 |
 | SECRET-002 | Implementar cliente Secrets Manager Python | COMPLETADA | FLOCI-001 |
@@ -197,7 +197,7 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | WIRE-001 | Ordenar Floci, validación, agente y bridge | COMPLETADA | Fases 2–4 |
 | WIRE-002 | Crear inicializador idempotente | COMPLETADA | SECRET-003–005 |
 | WIRE-003 | Configurar healthchecks y reinicios | COMPLETADA | WIRE-001 |
-| PORTABLE-001 | Validar `amd64` | PENDIENTE | WIRE-001–003 |
+| PORTABLE-001 | Validar `amd64` | COMPLETADA | WIRE-001–003 |
 | PORTABLE-002 | Validar Raspberry `arm64` | COMPLETADA | FLOCI-004, WIRE-001–003 |
 | PORTABLE-003 | Configurar límites de recursos | COMPLETADA | WIRE-001 |
 | PORTABLE-004 | Documentar systemd opcional | COMPLETADA | WIRE-003 |
@@ -212,7 +212,7 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | TEST-002 | Ejecutar pruebas Python | COMPLETADA | AGENT-005, SECRET-002–004 |
 | TEST-003 | Validar Docker Compose | COMPLETADA | WIRE-003 |
 | TEST-004 | Comprobar bootstrap y persistencia | COMPLETADA | SECRET-003–005 |
-| TEST-005 | Ejecutar smoke test por WhatsApp | PENDIENTE | TEST-001–004 |
+| TEST-005 | Ejecutar smoke test por WhatsApp | COMPLETADA | TEST-001–004 |
 | TEST-006 | Comprobar rotación y rechazo del token anterior | COMPLETADA | SECRET-006 |
 | SEC-001 | Revisar archivos sensibles y logs | COMPLETADA | Todas las fases |
 | DOC-002 | Crear README operativo | COMPLETADA | Fases 1–5 |
@@ -407,6 +407,26 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 | 2026-07-15 | SEC-001 | `npm audit --audit-level=high` | 0 vulnerabilidades |
 | 2026-07-15 | SEC-001 | `pip check` | Sin dependencias rotas |
 | 2026-07-15 | SEC-001 | `git grep` y `git check-ignore` | Sin secretos versionados |
+| 2026-07-18 | PORTABLE-001 | `init-instance.sh` en `x86_64` | Floci y agente healthy |
+| 2026-07-18 | DATA-001 | Reinicio Floci + `secrets-validate` | Secreto persistente |
+| 2026-07-18 | TEST-006 | Rotacion + solicitudes con token anterior/nuevo | `401` / `200` |
+| 2026-07-18 | TEST-005 | QR PNG, vinculacion y mensaje real | `ready`; saludo correcto |
+
+### Evidencia operativa amd64 - 2026-07-18
+
+- Host `x86_64`, Docker 27.3.1 y Compose 2.29.7.
+- Floci `1.5.30` uso su healthcheck nativo y conservo el secreto despues de reiniciar.
+- El agente quedo healthy; la rotacion rechazo el token anterior con `401` y acepto
+  el nuevo con `200`, sin imprimir valores.
+- El QR dejo de emitirse por logs. Se genero como PNG `0600`, se copio a un directorio
+  temporal local y se refresco sin publicar puertos.
+- WhatsApp reconocio el PNG, sincronizo chats y mantuvo el dispositivo vinculado.
+- `whatsapp-web.js` se actualizo a 1.34.7. El bloqueo posterior a `authenticated` se
+  debia a que su cache relativo intentaba escribir bajo `/app` con UID 1000.
+- Al mover el cache a `/tmp/wa-bridge-web-cache`, se observaron
+  `whatsapp_authenticated` y `whatsapp_ready`; el bridge quedo healthy.
+- Un mensaje privado real produjo `Hola {nombre}`. Cuando `message.getChat()` fallo,
+  typing se degrado sin impedir la llamada al agente.
 
 ## Commits de implementación
 
@@ -434,18 +454,19 @@ El nombre vacío produce `{"reply":"Hola"}`. Un token ausente o incorrecto produ
 
 ## Deuda y limitaciones pendientes
 
-- La disponibilidad real de imágenes Floci para cada arquitectura debe validarse.
-- El smoke test por WhatsApp requiere vinculación manual mediante QR.
+- Typing puede no mostrarse cuando la version corriente de WhatsApp Web no permite
+  resolver el chat; la respuesta del agente continua.
 - Floci local no garantiza por sí solo cifrado en reposo.
 - No hay alta disponibilidad ni rotación sin reinicio en esta versión.
+- Orden por chat, deduplicacion, limites de concurrencia y hardening adicional se
+  planifican en `docs/deferred-improvements.md`.
 
 ## Cierre del proyecto
 
-- Fecha de entrega técnica: 2026-07-15.
+- Fecha de entrega técnica: 2026-07-18.
 - Commit final: commit documental que contiene este cierre.
-- Resultado global: implementación completa y validada en `linux/arm64`; Floci,
-  bootstrap, agente, bridge, QR, rotación y persistencia comprobados.
+- Resultado global: infraestructura, secretos, agente y flujo real de WhatsApp
+  validados en `linux/amd64`, con validacion previa de infraestructura en `linux/arm64`.
 - Limitaciones residuales:
-  - `FLOCI-003` y `PORTABLE-001`: ejecutar el mismo smoke test en un host `amd64`.
-  - `TEST-005`: escanear el QR y enviar un mensaje privado real para comprobar la
-    respuesta y animación desde el teléfono.
+  - Typing es best-effort cuando falla la resolucion del chat.
+  - Repetir en `arm64` los cambios posteriores de QR PNG y cliente WhatsApp.

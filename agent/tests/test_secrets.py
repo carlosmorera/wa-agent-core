@@ -43,6 +43,15 @@ def test_secret_name_uses_instance_when_not_configured():
     )
 
 
+def test_secret_name_prefers_configured_name():
+    assert internal_token_secret_name(
+        {
+            "INSTANCE_ID": "ignored",
+            "SECRET_INTERNAL_API_TOKEN_NAME": "custom/team/internal-token",
+        }
+    ) == "custom/team/internal-token"
+
+
 def test_provider_reads_and_caches_required_secret():
     client = FakeClient({"token": "value"})
     provider = SecretProvider(client)

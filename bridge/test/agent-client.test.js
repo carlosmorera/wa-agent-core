@@ -27,3 +27,21 @@ test('rejects an empty agent reply', async () => {
 test('requires a runtime token', () => {
   assert.throws(() => createAgentClient({ env: {} }), /internal_api_token_required/);
 });
+
+test('rejects an invalid agent URL during startup', () => {
+  assert.throws(
+    () => createAgentClient({ env: { INTERNAL_API_TOKEN: 'private', AGENT_URL: 'file:///tmp/agent' } }),
+    /agent_url_invalid/,
+  );
+});
+
+test('rejects invalid request timeouts during startup', () => {
+  for (const value of ['invalid', '0', '-1', '120001']) {
+    assert.throws(
+      () => createAgentClient({
+        env: { INTERNAL_API_TOKEN: 'private', AGENT_REQUEST_TIMEOUT_MS: value },
+      }),
+      /agent_request_timeout_invalid/,
+    );
+  }
+});

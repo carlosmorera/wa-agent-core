@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Changed — 2026-07-18
+
+- El QR de vinculacion se genera como PNG temporal con permisos `0600`, se elimina al
+  quedar listo, fallar la autenticacion o desconectarse y nunca se imprime en logs. El
+  comando operativo abre una pagina local y refresca los QR rotados.
+- Inicializacion y rotacion respetan `SECRET_INTERNAL_API_TOKEN_NAME` y validan los
+  identificadores antes de generar archivos de secretos.
+- Las herramientas one-shot esperan el healthcheck nativo de Floci y el bridge valida
+  URL, timeout y configuracion de escritura antes de conectarse con WhatsApp.
+- Los fallos de contacto, ACL, chat, agente y respuesta se contienen y clasifican sin
+  exponer datos privados ni responder antes de aprobar la ACL.
+- `whatsapp-web.js` se actualiza de 1.34.6 a 1.34.7 por sus correcciones de inicio,
+  autenticacion e inyeccion Store. Su cache se ubica en `/tmp` para que el usuario no
+  root pueda persistir el HTML y completar `ready`.
+- Si WhatsApp no permite resolver el chat para activar typing, el bridge degrada solo
+  esa animacion y mantiene la llamada al agente y la respuesta.
+
 ### Added — 2026-07-15
 
 - Lockfile reproducible del bridge y construcción mediante `npm ci`.

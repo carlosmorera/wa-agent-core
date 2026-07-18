@@ -4,9 +4,19 @@ function createAgentClient(options = {}) {
   const env = options.env || process.env;
   const baseUrl = String(env.AGENT_URL || 'http://agent:8000').replace(/\/+$/, '');
   const token = String(env.INTERNAL_API_TOKEN || '');
-  const timeoutMs = Number.parseInt(env.AGENT_REQUEST_TIMEOUT_MS || '30000', 10);
+  const timeoutMs = Number(env.AGENT_REQUEST_TIMEOUT_MS || '30000');
   const fetchImpl = options.fetchImpl || global.fetch;
   if (!token) throw new Error('internal_api_token_required');
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(baseUrl);
+  } catch {
+    throw new Error('agent_url_invalid');
+  }
+  if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error('agent_url_invalid');
+  if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 120000) {
+    throw new Error('agent_request_timeout_invalid');
+  }
 
   return {
     async sendMessage(payload) {
